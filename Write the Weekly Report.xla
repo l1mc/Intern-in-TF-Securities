@@ -1,0 +1,157 @@
+Sub a()
+Dim sh1, sh2, sh3, sh4
+Dim arr1, arr2(0 To 28, 0 To 1), arr3
+Dim i, j, a, b
+Set sh1 = Sheets("万得")
+Set sh2 = Sheets("各行涨跌幅")
+Set sh3 = Sheets("基化子行业涨跌幅")
+Set sh4 = Sheets("万得1")
+Set arr1 = sh1.Range("A3:B303") '两边都是从1开始
+Set arr3 = sh1.Range("A3:A303") '从1开始
+'以下完成《各行涨跌幅》
+For i = 0 To 28
+    arr2(i, 0) = sh2.Cells(i + 3, 4).Value '从0开始。这个是我要的结果。
+    a = Application.Match("CS" & arr2(i, 0), arr3, 0)
+    arr2(i, 1) = arr1(a, 2)
+Next i
+For i = 0 To 28
+    sh2.Cells(i + 3, 2) = arr2(i, 1)
+Next i
+For i = 28 To 1 Step -1
+    For j = i - 1 To 0 Step -1
+        If arr2(i, 1) > arr2(j, 1) Then
+            b = arr2(i, 1)
+            arr2(i, 1) = arr2(j, 1)
+            arr2(j, 1) = b
+            b = arr2(i, 0)
+            arr2(i, 0) = arr2(j, 0)
+            arr2(j, 0) = b
+        End If
+    Next j
+Next i
+sh2.[g3:h3].Resize(UBound(arr2)) = arr2
+sh2.[g31] = arr2(28, 0)
+sh2.[h31] = arr2(28, 1)
+
+'以下完成《基化子行业涨跌幅》
+Set arr1 = sh4.Range("A4:B32") '两边都是从1开始
+Set arr3 = sh4.Range("A4:A32") '从1开始
+For i = 0 To 28
+    arr2(i, 0) = sh3.Cells(i + 5, 4).Value '从0开始。这个是我要的结果。
+    a = Application.Match("SW" & arr2(i, 0), arr3, 0)
+    arr2(i, 1) = arr1(a, 2)
+Next i
+For i = 0 To 28
+    sh3.Cells(i + 5, 2) = arr2(i, 1)
+Next i
+For i = 28 To 1 Step -1
+    For j = i - 1 To 0 Step -1
+        If arr2(i, 1) > arr2(j, 1) Then
+            b = arr2(i, 1)
+            arr2(i, 1) = arr2(j, 1)
+            arr2(j, 1) = b
+            b = arr2(i, 0)
+            arr2(i, 0) = arr2(j, 0)
+            arr2(j, 0) = b
+        End If
+    Next j
+Next i
+sh3.[g3:h3].Resize(UBound(arr2)) = arr2
+sh3.[g31] = arr2(28, 0)
+sh3.[h31] = arr2(28, 1)
+
+'以下整理《涨跌排行》
+Dim sh5
+Dim arr4, arr5, arr6
+Dim c, d, e
+Dim f
+Dim l
+Set sh5 = Sheets("涨跌排行")
+sh5.Range("A:B,F:G,I:I,N:P").Delete
+c = sh5.Range("A1").End(xlDown).Row
+Set arr5 = sh5.Range(sh5.Cells(2, 1), sh5.Cells(c, 1))
+Set arr6 = sh5.Range(sh5.Cells(2, 2), sh5.Cells(c, 8))
+For i = 1 To c
+    If arr5(i) = "化工行业" Then d = d + 1
+Next i
+ReDim arr4(1 To d, 1 To 7)
+For i = 1 To c
+    If arr5(i) = "化工行业" Then
+        e = e + 1
+        For j = 1 To 7
+            arr4(e, j) = arr6(i, j)
+        Next j
+    End If
+Next i
+'下面是排出来跌幅前20
+For i = 1 To d - 1
+    For j = i + 1 To d
+        If arr4(j, 4) > arr4(i, 4) Then
+            For l = 1 To 7
+                b = arr4(i, l)
+                arr4(i, l) = arr4(j, l)
+                arr4(j, l) = b
+            Next l
+        End If
+    Next j
+Next i
+arr5 = [b1:h1]
+For i = 1 To 7
+    sh5.Range(sh5.Cells(1, i + 9), sh5.Cells(1, i + 9)) = arr5(1, i)
+Next i
+sh5.[j2:p2].Resize(UBound(arr4)) = arr4
+sh5.Columns("M:P").NumberFormatLocal = "0.00%"
+sh5.Columns("J:P").HorizontalAlignment = xlCenter
+sh5.Range("j2:p9").Interior.ColorIndex = 3
+
+For i = 1 To d - 1
+    For j = i + 1 To d
+        If arr4(j, 4) < arr4(i, 4) Then
+            For l = 1 To 7
+                b = arr4(i, l)
+                arr4(i, l) = arr4(j, l)
+                arr4(j, l) = b
+            Next l
+        End If
+    Next j
+Next i
+arr5 = [a1:h1]
+For i = 1 To 7
+    sh5.Range(sh5.Cells(1, i + 17), sh5.Cells(1, i + 17)) = arr5(1, i)
+Next i
+sh5.[r2:x2].Resize(UBound(arr4)) = arr4
+sh5.Columns("u:x").NumberFormatLocal = "0.00%"
+sh5.Columns("r:x").HorizontalAlignment = xlCenter
+sh5.Range("r2:x9").Interior.ColorIndex = 3
+End Sub
+
+
+Sub S2()
+Dim arr
+On Error Resume Next
+arr = Array("a", "c", "b", "fa", "d")
+MsgBox Application.Match("f" & "a", arr, 0)
+If Err.Number = 13 Then
+    MsgBox "查找不到"
+End If
+End Sub
+
+
+Sub 宏2()
+'
+' 宏2 宏
+'
+
+'
+    Columns("J:P").Select
+    With Selection
+        .HorizontalAlignment = xlCenter
+        .WrapText = False
+        .Orientation = 0
+        .AddIndent = False
+        .IndentLevel = 0
+        .ShrinkToFit = False
+        .ReadingOrder = xlContext
+        .MergeCells = False
+    End With
+End Sub
