@@ -1,0 +1,246 @@
+Public arr3
+Public e, k As Integer
+Public Sub gettest()
+On Error Resume Next
+'变量定义
+Dim j, i, skuID, productID, a, b As Integer '①j是在工作表里面，不同产品的循环计数器。②i是在网抓后处理数据过程中，对于不同日期的数据的循环计数器
+Dim xmlhttp, match As Object '①xmlhttp可以说是一个网页对象②match是每一个日期的数据的每一个返回值
+Dim strresponse As String '①strresponse是网页返回的html语言，
+Dim arr1(14, 1), arr4 '①arr1是从HTML转到对应值的过渡
+Dim c As Date '从表格中提取最新数据所对应的日期时用到的变量
+Dim arr2 '提取工作表中还没有的数据时，创建的数据
+Dim f, g, h, z, y As Integer
+Set sh = Sheets("照片")
+Set sh2 = Sheets("分产品年度、季度业绩拆分(按当前价格预测)")
+
+
+
+sh.Range("XEW1").AddComment ("UEsDBBQAAAAIAA9R3Uwk3V2KcAEAAIQPAAAKAAAAemlwcGVkZmlsZXN1cWJgZWBg4GBmAIOOjgt2wQl+Po0Xfr2yPZTwmwEN/AcCIMV46sLmhXtuaxzbu+/nntuaVqdXb7/saLV71bbVW28c/4GuaVAD+V8CYJoRJjBYvcYYbGpiYmhhYYBDXnUG90rGaxd2/sJjxqGF127tXr9zCSn2Xlmlv+0aMQqZBm/YkQx4Vg60C0bBYASty3Wj+5c+8luwVr+Pf/7ayejyqOWj1bb1B5cd3qURaGpqYKBzcu+575t+aVodv7H71NZdA+B4ssB3fT4wjVY+Dj6vActHQyMDAwtLHPJZM/kJlo87rl1bt+cSafYSXz4yDtqwIxnwj5aPowALEDENXePUctBhd0/FCoYpfmro8rDy8fy13V+BGWHP9dMPrXb+OnJrAJxKJWBwIRlMw8vHweo1UPvR3MDY2ASHvPAiIsrHn/vuXjh07ujV3wfeEmsvKe3HwRp2JIPR8nEUoAFGcBHBCCknGPlB5P6FD1YwMAAAUEsBAhQAFAAAAAgAD1HdTCTdXYpwAQAAhA8AAAoAAAAAAAAAAAAgAAAAAAAAAHppcHBlZGZpbGVQSwUGAAAAAAEAAQA4AAAAmAEAAAAA")
+Application.CalculateFull
+
+
+'开始正文
+With sh2
+t = Timer
+a = .Range("af8").End(xlDown).Row
+b = Date - .Cells(a, "AF").Value
+If Format(Time, "hh:mm") < "16:30" Then
+    MsgBox "提示：今日数据百川上还未更新，自动更新到昨日数据"
+    b = b - 1
+End If
+If b = 0 Then
+    MsgBox "数据已更新到最新"
+    Exit Sub
+End If
+z = .Range("ca8").End(xlDown).Row
+
+    '从单元格中读取产品ID
+    For j = 1 To 46
+        For k = j To 46
+            If .Cells(4, 32 + k) <> "" Then
+                j = k
+                Exit For
+            End If
+        Next k
+        skuID = .Cells(4, 32 + j)
+        productID = .Cells(5, 32 + j)
+
+    '网抓常规工作
+        Set xmlhttp = CreateObject("msxml2.xmlhttp")
+
+            xmlhttp.Open "post", "http://www.baiinfo.com/Orders/NewHistoryGrid?begin=" & Format(Date - 14, "yyyy-mm-dd") & _
+                                "&end=" & Format(Date, "yyyy-mm-dd") & "&skuid=" & skuID & "%2C&productID=" & productID, False
+        xmlhttp.setrequestheader "Content-Type", "application/x-www-form-urlencoded"
+        xmlhttp.send "LogName=tfsc&password=111111&rememberMe=false"
+        
+
+        Do While xmlhttp.readystate <> 4
+            DoEvents
+        Loop
+'
+        strresponse = xmlhttp.responsetext
+        strresponse = Split(strresponse, "生成")(1)
+
+    '利用正则表达式提取日期和数字，并最终放入字典，以待查找
+        i = 0
+        With CreateObject("VBScript.regexp")
+            .Global = True
+            .Pattern = "\\u003e(\d{4}-\d{2}-\d{2})\\u003c?"
+            If .test(strresponse) Then
+                For Each match In .Execute(strresponse)
+                    arr1(i, 0) = match.submatches(0)
+                    i = i + 1
+                Next
+            Else
+                Debug.Print "不对"
+            End If
+        End With
+
+        i = 0
+        With CreateObject("VBScript.regexp")
+            .Global = True
+            .Pattern = "\\u003e(\d+)\\u003c?"
+            If .test(strresponse) Then
+                For Each match In .Execute(strresponse)
+                    arr1(i, 1) = match.submatches(0)
+                    i = i + 1
+                    If i > 14 Then Exit For
+                Next
+            Else
+                Debug.Print "不对"
+            End If
+        End With
+
+
+        Set d = CreateObject("scripting.dictionary")
+        For i = 0 To 14
+            d.Add arr1(i, 0), arr1(i, 1)
+        Next i
+'
+    '将结果写入表格
+        c = .Cells(a, "AF")
+        ReDim arr2(1 To b, 1 To 2)
+        For i = 1 To b
+            arr2(i, 1) = c + i
+            arr2(i, 2) = d(Format(arr2(i, 1), "yyyy-mm-dd"))
+        Next i
+
+        For i = 1 To b
+            .Cells(a + i, 32 + j) = arr2(i, 2)
+            If .Cells(a + i, "AF") = "" Then .Cells(a + i, "AF") = arr2(i, 1)
+            If .Cells(a + i, "CA") = "" Then .Cells(z + i, "CA") = arr2(i, 1)
+        Next i
+
+    Next j
+
+    '填充双氧水数据
+    For i = 1 To b
+        .Cells(z + i, 80) = .Cells(a + i, 32 + 46)
+    Next i
+End With
+
+    '填充wind数据
+    With sh
+        y = Date - .Cells(15, "XEW").Value
+        e = .Range("xew2").End(xlDown).Row
+        e = e - 3
+'        If y > 0 Then e = e - 1
+        arr3 = Range(.Cells(4, "XEW"), .Cells(15, "XEZ"))  '这里需要把第二个单元格的行坐标改成变的
+        For k = 2 To 4
+            For i = 1 To e
+                If arr3(i, k) = 0 Then aa (i)
+            Next i
+        Next k
+        
+        If y > 0 Then arr3(e, 1) = Date
+        g = 0
+        ReDim arr4(1 To 15 + y, 1 To 4)
+        For i = 1 To 15 + y
+            If i = 1 Then
+                For k = 1 To 4
+                    arr4(i, k) = arr3(i, k)
+                Next k
+                g = g + 1
+            Else
+                g = g + 1
+                h = arr3(g, 1) - arr3(g - 1, 1) - 1
+                i = i + h
+                For k = 1 To 4
+                    arr4(i, k) = arr3(g, k)
+                Next k
+            End If
+        Next i
+            For i = 1 To 15 + y
+                If arr4(i, 1) = "" Then
+                    arr4(i, 1) = arr4(i - 1, 1) + 1
+                    For k = 2 To 4
+                        arr4(i, k) = arr4(i - 1, k)
+                    Next k
+                End If
+            Next i
+    End With
+    
+
+    For k = 2 To 4
+        d.RemoveAll
+        For i = 1 To 15
+            d.Add arr4(i, 1), arr4(i, k)
+        Next i
+        For i = 1 To b
+            arr2(i, 2) = d(arr2(i, 1))
+        Next i
+
+        For i = 1 To b
+            If k = 2 Then
+                sh2.Cells(a + i, "AH") = arr2(i, 2)
+            ElseIf k = 3 Then
+                sh2.Cells(a + i, "BB") = arr2(i, 2)
+            Else
+                sh2.Cells(a + i, "BW") = arr2(i, 2)
+            End If
+        Next i
+    Next k
+    
+
+    '价差部分自动填充
+    For j = 1 To 46
+        If sh2.Cells(a + 1, 32 + j) = "" Then
+            sh2.Cells(a, 32 + j).AutoFill Destination:=Range(sh2.Cells(a, 32 + j), sh2.Cells(a + b, 32 + j))
+        End If
+    Next j
+    
+    '修改单元格格式
+    With Range(sh2.Cells(a + 1, 32), sh2.Cells(a + b, 32 + 45))
+        .Interior.Color = RGB(184, 204, 228)
+        .Font.Name = "宋体"
+        .Borders.LineStyle = xlContinuous
+        .Font.Size = 10
+    End With
+    With Range(sh2.Cells(z + 1, 79), sh2.Cells(z + b, 80))
+        .Interior.Color = RGB(184, 204, 228)
+        .Font.Name = "宋体"
+        .Borders.LineStyle = xlContinuous
+        .Font.Size = 10
+    End With
+    
+    '更新表格“最新价格净利走势”
+    Set sh3 = Sheets("最新价格净利走势")
+    With sh3
+    y = .Cells(2, 3).End(xlDown).Row
+        For i = 1 To b
+            If .Cells(y, 3) + i > arr2(b, 1) Then Exit For
+            .Cells(i + y, 3) = .Cells(y, 3) + i
+            .Cells(i + y, 5) = .Cells(i + y, 4).Value
+        Next i
+    End With
+    
+    '更新图片
+    Sheets("价格价差周变化").Range("A1:F17").Copy
+    For Each pic In Sheets("照片").Shapes
+        pic.Delete
+    Next
+    Sheets("照片").Select
+    Range("a1").Select
+    Sheets("照片").Pictures.Paste
+
+'信息提示
+t = Timer - t
+MsgBox "数据更新完成，总计用时" & t & "秒"
+End Sub
+
+Public Function aa(i As Integer)
+If i > e Then aa = bb(i - 1)
+If i <= e Then
+    aa = arr3(i, k)
+Else
+    Exit Function
+End If
+If aa = 0 Then aa = aa(i + 1)
+arr3(i, k) = aa
+If i = e Then Exit Function
+End Function
+
+Public Function bb(i As Integer)
+bb = arr3(i, k)
+If bb = 0 Then bb = bb(i - 1)
+End Function
