@@ -1,0 +1,168 @@
+Sub 宏1()
+'
+' 产品涨跌排序
+'
+
+'
+Dim t, i As Integer
+Dim a, b, c, x1, x2
+    t = 0
+    Sheets("产品涨跌").Select
+    ActiveSheet.Range("$A$1:$P$309").AutoFilter Field:=3, Criteria1:="化工行业"
+    ActiveWorkbook.Worksheets("产品涨跌").Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("产品涨跌").Sort.SortFields.Add Key:=Range( _
+        "I2:I309"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:= _
+        xlSortNormal
+    With ActiveWorkbook.Worksheets("产品涨跌").Sort
+        .SetRange Range("A1:P309")
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    For i = 2 To 300
+        a = Range(Cells(i, 3), Cells(i, 3)).Value
+        If Cells(i, 3) = "化工行业" And Cells(i, 4) <> "维生素VE" And Cells(i, 4) <> "维生素VA" And Cells(i, 4) <> "维生素VC" Then
+        t = t + 1
+        Sheets("处理数据").Cells(40 + t, 1) = Cells(i, 4)
+        Sheets("处理数据").Cells(40 + t, 2) = Cells(i, 9)
+        End If
+        If t >= 3 Then Exit For
+    Next i
+    Sheets("封面").Select
+    Range("j12:k13").ClearContents
+    Range("K12").Formula = "=处理数据!A41&""（""&TEXT(处理数据!B41,""0.00%"")&""），""&处理数据!A42&""（""&TEXT(处理数据!B42,""0.00%"")&""），""&处理数据!A43&""（""&TEXT(处理数据!B43,""0.00%"")&""）"""
+    Range("J12").Select
+    Sheets("封面").Select
+    Range("K12").Select
+    Selection.Copy
+    Range("J12").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    Sheets("产品涨跌").Select
+    Application.CutCopyMode = False
+    ActiveWorkbook.Worksheets("产品涨跌").AutoFilter.Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("产品涨跌").AutoFilter.Sort.SortFields.Add Key:= _
+        Range("I1:I309"), SortOn:=xlSortOnValues, Order:=xlDescending, DataOption _
+        :=xlSortNormal
+    With ActiveWorkbook.Worksheets("产品涨跌").AutoFilter.Sort
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    t = 0
+    For i = 2 To 300
+        If Cells(i, 3) = "化工行业" Then
+        t = t + 1
+        Sheets("处理数据").Cells(40 + t, 1) = Cells(i, 4)
+        Sheets("处理数据").Cells(40 + t, 2) = Cells(i, 9)
+        End If
+        If t >= 3 Then Exit For
+    Next i
+    Sheets("封面").Select
+    Range("K12").Select
+    Selection.Copy
+    Range("J13").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    Range("I12").Select
+    Application.CutCopyMode = False
+    
+    '公告筛选
+Sheets("公司公告").Select
+a = Range("a1").End(xlDown).Row
+    x1 = Range("c1").End(xlDown).Row
+    x2 = Range("c1").End(xlToLeft).Column
+For i = 2 To 200
+    If InStr(Cells(i, 3), "进展") Or _
+    InStr(Cells(i, 3), "自主行权") Or InStr(Cells(i, 3), "资产评估有限公司") Or InStr(Cells(i, 3), "激励对象名单") Or _
+    InStr(Cells(i, 3), "前十名股东持股信息") Or InStr(Cells(i, 3), "的回复公告") Or InStr(Cells(i, 3), "首次披露对照表") Or _
+    InStr(Cells(i, 3), "安全生产许可") Or InStr(Cells(i, 3), "财务顾问报告") Or InStr(Cells(i, 3), "情况对照表") Or _
+    InStr(Cells(i, 3), "保荐代表人") Or InStr(Cells(i, 3), "监事会关于") Or InStr(Cells(i, 3), "特别风险提示公告") Or _
+    InStr(Cells(i, 3), "土地使用权") Or InStr(Cells(i, 3), "投资咨询股份有限公司") Or InStr(Cells(i, 3), "一般风险提示公告") Or _
+    InStr(Cells(i, 3), "会后事项") Or InStr(Cells(i, 3), "监事会关于") Or InStr(Cells(i, 3), "购买资产协议") Or _
+    InStr(Cells(i, 3), "核查意见") Or InStr(Cells(i, 3), "计划实施完毕") Or InStr(Cells(i, 3), "补充更正公告") Or _
+    InStr(Cells(i, 3), "资产评估有限责任公司") Or InStr(Cells(i, 3), "结果的公告") Or InStr(Cells(i, 3), "澄清公告") Or _
+    InStr(Cells(i, 3), "延期回复") Or InStr(Cells(i, 3), "专项核查意见") Or InStr(Cells(i, 3), "召开情况的公告") Or _
+    InStr(Cells(i, 3), "完成的公告") Or InStr(Cells(i, 3), "备案手续的公告") Or InStr(Cells(i, 3), "延期向中国证监会") Or _
+    InStr(Cells(i, 3), "收到上海证券交易所") Or InStr(Cells(i, 3), "配股") Or InStr(Cells(i, 3), "法定代表人变更") Or _
+    InStr(Cells(i, 3), "终止重大资产重组") Or InStr(Cells(i, 3), "进行调整的公告") Or _
+    InStr(Cells(i, 3), "独立董事关于") Or InStr(Cells(i, 3), "业绩预告") Or _
+    InStr(Cells(i, 3), "限售股解禁") Or InStr(Cells(i, 3), "完成股份过户") Or _
+    InStr(Cells(i, 3), "签订工程施工合同") Or InStr(Cells(i, 3), "预增公告") Or _
+    InStr(Cells(i, 3), "临时补充流动资金") Or InStr(Cells(i, 3), "补充公告") Or _
+    InStr(Cells(i, 3), "减持股份结果") Or InStr(Cells(i, 3), "实施公告") Or _
+    InStr(Cells(i, 3), "期限届满") Or InStr(Cells(i, 3), "意见书") Or _
+    InStr(Cells(i, 3), "自查报告") Or InStr(Cells(i, 3), "董事会关于") Or _
+    InStr(Cells(i, 3), "证券股份有限公司") Or InStr(Cells(i, 3), "实施结果") Or _
+    InStr(Cells(i, 3), "反馈意见回复") Or InStr(Cells(i, 3), "债权人通知公告") Or _
+    InStr(Cells(i, 3), "律师事务所") Or InStr(Cells(i, 3), "顾问专业意见") Or _
+    InStr(Cells(i, 3), "募集资金使用") Or InStr(Cells(i, 3), "国资委关于") Or _
+    InStr(Cells(i, 3), "投资者关系") Then Cells(i, 3).Font.ColorIndex = 15
+Next i
+For i = 2 To 200
+    If InStr(Cells(i, 3), "复牌") Or _
+    InStr(Cells(i, 3), "董事会换届") Or _
+    InStr(Cells(i, 3), "监事会换届") Or _
+    InStr(Cells(i, 3), "年度报告") Or _
+    InStr(Cells(i, 3), "增持公司股份") Then Cells(i, 3).Font.ColorIndex = 5
+Next i
+'    ActiveWorkbook.Worksheets("公司公告").AutoFilter.Sort.SortFields.Clear
+'    ActiveWorkbook.Worksheets("公司公告").AutoFilter.Sort.SortFields.Add(Range("C2:C54" _
+'        ), xlSortOnFontColor, xlDescending, , xlSortNormal).SortOnValue.Color = RGB(192 _
+'        , 192, 192)
+'    With ActiveWorkbook.Worksheets("公司公告").AutoFilter.Sort
+'        .Header = xlYes
+'        .MatchCase = False
+'        .Orientation = xlTopToBottom
+'        .SortMethod = xlPinYin
+'        .Apply
+'    End With
+'    ActiveWorkbook.Worksheets("公司公告").Sort.SortFields.Clear
+'    ActiveWorkbook.Worksheets("公司公告").Sort.SortFields.Add(Range("C2:C30"), _
+'        xlSortOnFontColor, xlDescending, , xlSortNormal).SortOnValue.Color = RGB(192, _
+'        192, 192)
+'    With ActiveWorkbook.Worksheets("公司公告").Sort
+'        .SetRange Range("A1:C30")
+'        .Header = xlYes
+'        .MatchCase = False
+'        .Orientation = xlTopToBottom
+'        .SortMethod = xlPinYin
+'        .Apply
+'    End With
+Range("a:B").ClearContents
+Range("a1") = "公司名称"
+Range("b1") = "公告内容"
+Range("a2").Formula = "=left(C2,5)"
+Range("a2:a100").FillDown
+Columns("C:C").ColumnWidth = 100
+'公告排序
+    Range("a1").AutoFilter
+    ActiveWorkbook.Worksheets("公司公告").AutoFilter.Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("公司公告").AutoFilter.Sort.SortFields.Add(Range("C1"), _
+        xlSortOnFontColor, xlAscending, , xlSortTextAsNumbers).SortOnValue.Color = RGB( _
+        0, 0, 255)
+    With ActiveWorkbook.Worksheets("公司公告").AutoFilter.Sort
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+'股票涨跌排序
+    Sheets("日").Select
+    ActiveWorkbook.Worksheets("日").AutoFilter.Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("日").AutoFilter.Sort.SortFields.Add Key:=Range("D1" _
+        ), SortOn:=xlSortOnValues, Order:=xlDescending, DataOption:= _
+        xlSortTextAsNumbers
+    With ActiveWorkbook.Worksheets("日").AutoFilter.Sort
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+End Sub
